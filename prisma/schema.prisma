@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+//  RBAC Core Models
+// ─────────────────────────────────────────────
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Create User"
+  code        String   @unique // e.g. "USER.CREATE"
+  description String?
+  module      String   // e.g. "USER", "TICKET", "METRICS"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model RbacRole {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g. "Support Agent"
+  code        String   @unique // e.g. "AGENT"
+  description String?
+  isSystem    Boolean  @default(false) // system roles can't be deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  grantedAt    DateTime @default(now())
+
+  role       RbacRole   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  grantedAt DateTime @default(now())
+  grantedBy String?  // userId of admin who assigned
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role RbacRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+// ─────────────────────────────────────────────
+//  Application Models
+// ─────────────────────────────────────────────
+
+model User {
+  id                 String      @id @default(cuid())
+  email              String      @unique
+  name               String
+  passwordHash       String
+  hashedRefreshToken String?
+  isVerified         Boolean     @default(false)
+
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  roles              UserRole[]
+}
