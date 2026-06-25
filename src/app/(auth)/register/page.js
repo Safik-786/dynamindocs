@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TextField, Button, Typography, Paper, Alert } from "@mui/material";
+import { TextField, Button, Typography, Alert, Box, IconButton, InputAdornment } from "@mui/material";
 import Link from "next/link";
+import { ArrowBack as ArrowBackIcon, Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +31,6 @@ export default function RegisterPage() {
         throw new Error(data.message || "Registration failed");
       }
 
-      // Automatically redirect to login on success
       router.push("/login?registered=true");
     } catch (err) {
       setError(err.message);
@@ -39,41 +40,85 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-50 min-h-screen">
-      <Paper elevation={3} className="p-8 w-full max-w-md rounded-xl">
-        <Typography variant="h4" component="h1" className="font-bold text-center mb-6 text-gray-800">
+    <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-mesh relative overflow-hidden">
+      {/* Decorative Orbs */}
+      <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+      <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-primary-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+
+      <Box className="w-full max-w-md p-8 sm:p-12 glass-panel rounded-3xl relative z-10 m-4 animate-fade-in-up border border-white/40 shadow-2xl">
+        <Link href="/" className="inline-flex items-center text-slate-500 hover:text-primary transition-colors mb-6 text-sm font-medium">
+          <ArrowBackIcon fontSize="small" className="mr-1" /> Back to home
+        </Link>
+        
+        <Typography variant="h4" component="h4" className="font-extrabold text-slate-900 mb-2">
           Create Account
         </Typography>
+        <Typography variant="body1" className="text-slate-500 mb-20">
+          Join DynamicDocs and start collaborating.
+        </Typography>
 
-        {error && <Alert severity="error" className="mb-4">{error}</Alert>}
+        {error && <Alert severity="error" className="mb-6 rounded-xl">{error}</Alert>}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex mt-5 flex-col gap-5">
           <TextField
             label="Full Name"
             type="text"
             variant="outlined"
+            size="small"
             fullWidth
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              }
+            }}
           />
           <TextField
             label="Email"
             type="email"
             variant="outlined"
+            size="small"
             fullWidth
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              }
+            }}
           />
           <TextField
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             variant="outlined"
+            size="small"
             fullWidth
             required
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              }
+            }}
           />
           
           <Button 
@@ -83,19 +128,19 @@ export default function RegisterPage() {
             size="large" 
             fullWidth
             disabled={loading}
-            className="mt-4 py-3"
+            className="mt-4 py-3 text-lg shadow-lg shadow-primary/30 bg-primary hover:bg-primary-hover"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-8 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline font-medium">
-            Log in here
+          <Link href="/login" className="text-primary hover:text-primary-hover font-semibold transition-colors">
+            Log in
           </Link>
         </div>
-      </Paper>
+      </Box>
     </div>
   );
 }

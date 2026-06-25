@@ -77,4 +77,61 @@ model User {
   updatedAt          DateTime    @updatedAt
 
   roles              UserRole[]
+  documentMembers    DocumentMember[]
+  documentsOwned     Document[]  @relation("DocumentOwner")
+}
+
+// ─────────────────────────────────────────────
+//  Document Models (Phase 2)
+// ─────────────────────────────────────────────
+
+model Document {
+  id          String   @id @default(cuid())
+  title       String   @default("Untitled Document")
+  content     Bytes?   // Yjs binary state
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User             @relation("DocumentOwner", fields: [ownerId], references: [id])
+  members     DocumentMember[]
+  versions    DocumentVersion[]
+  operations  SyncOperation[]
+}
+
+model DocumentMember {
+  id         String   @id @default(cuid())
+  documentId String
+  userId     String
+  role       String   // "EDITOR", "VIEWER"
+  joinedAt   DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, userId])
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  name       String?  // e.g., "Version 1"
+  content    Bytes    // Yjs binary state at this snapshot
+  createdAt  DateTime @default(now())
+  createdBy  String?  // userId
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model SyncOperation {
+  id         String   @id @default(cuid())
+  documentId String
+  clientId   Float    // Yjs client ID that created the operation
+  clock      Float    // Yjs clock for ordering
+  update     Bytes    // Yjs update binary
+  createdAt  DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
 }
