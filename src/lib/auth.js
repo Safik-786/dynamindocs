@@ -89,3 +89,63 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/login',
   }
 });
+
+
+
+
+
+// {
+//   "id": "user-uuid-1234",
+//   "name": "John Doe",
+//   "email": "john@dynamicdocs.com",
+//   "passwordHash": "$2a$10$xyz...",
+//   "createdAt": "2026-06-26T10:00:00.000Z",
+//   "updatedAt": "2026-06-26T10:00:00.000Z",
+//   "isVerified": true,
+  
+//   // This array comes from `include: { roles: ... }`
+//   "roles": [
+//     {
+//       "id": "user-role-mapping-uuid",
+//       "userId": "user-uuid-1234",
+//       "roleId": "role-uuid-abcd",
+      
+//       // This object comes from `include: { role: ... }`
+//       "role": {
+//         "id": "role-uuid-abcd",
+//         "name": "System Administrator",
+//         "code": "ADMIN",
+        
+//         // This array comes from `include: { rolePermissions: ... }`
+//         "rolePermissions": [
+//           {
+//             "id": "mapping-uuid-1",
+//             "roleId": "role-uuid-abcd",
+//             "permissionId": "perm-uuid-1",
+            
+//             // This object comes from `include: { permission: true }`
+//             "permission": {
+//               "id": "perm-uuid-1",
+//               "code": "CREATE_USER",
+//               "name": "Create Users",
+//               "module": "USERS"
+//             }
+//           },
+//           {
+//             "id": "mapping-uuid-2",
+//             "roleId": "role-uuid-abcd",
+//             "permissionId": "perm-uuid-2",
+            
+//             "permission": {
+//               "id": "perm-uuid-2",
+//               "code": "DELETE_DOC",
+//               "name": "Delete Documents",
+//               "module": "DOCUMENTS"
+//             }
+//           }
+//           // ... more permissions ...
+//         ]
+//       }
+//     }
+//   ]
+// }

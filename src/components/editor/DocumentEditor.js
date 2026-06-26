@@ -12,9 +12,11 @@ import { io } from 'socket.io-client';
 import { 
   FormatBold, FormatItalic, StrikethroughS, Code,
   FormatListBulleted, FormatListNumbered, FormatQuote,
-  FormatColorText, FormatColorFill, History, Close, Restore, PersonAdd
+  FormatColorText, FormatColorFill, History, Close, Restore, PersonAdd,
+  AutoAwesome, Summarize, AutoFixHigh, Checklist
 } from '@mui/icons-material';
 import { ShareModal } from './ShareModal';
+import { AIChatSidebar } from './AIChatSidebar';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
@@ -33,6 +35,10 @@ export default function DocumentEditor({ documentId }) {
   const [newVersionName, setNewVersionName] = useState("");
   const [isSavingVersion, setIsSavingVersion] = useState(false);
   const [isRestoringVersion, setIsRestoringVersion] = useState(false);
+
+  // AI State
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isAILoading, setIsAILoading] = useState(false);
   
   const ydocRef = useRef(new Y.Doc());
   const socketRef = useRef(null);
@@ -225,6 +231,78 @@ export default function DocumentEditor({ documentId }) {
       clearInterval(interval);
     };
   }, [documentId]);
+
+  // AI Features Logic
+  const getDocumentText = () => {
+    return editor ? editor.getText() : "";
+  };
+
+  const handleSummarize = async () => {
+    const text = getDocumentText();
+    if (!text) return;
+    setIsAILoading(true);
+    try {
+      const res = await fetch('/api/v1/ai/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentText: text })
+      });
+      const data = await res.json();
+      if (data.summary) alert("AI Summary:\n\n" + data.summary);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
+
+  const handleRewrite = async () => {
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    if (from === to) {
+      alert("Please highlight text to rewrite.");
+      return;
+    }
+    const selectedText = editor.state.doc.textBetween(from, to, ' ');
+    setIsAILoading(true);
+    try {
+      const res = await fetch('/api/v1/ai/rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: selectedText, tone: 'professional' })
+      });
+      const data = await res.json();
+      if (data.rewrittenText) {
+        editor.commands.insertContentAt({ from, to }, data.rewrittenText);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
+
+  const handleActionItems = async () => {
+    const text = getDocumentText();
+    if (!text) return;
+    setIsAILoading(true);
+    try {
+      const res = await fetch('/api/v1/ai/action-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentText: text })
+      });
+      const data = await res.json();
+      if (data.actionItems) {
+        const list = data.actionItems.map(item => `• ${item}`).join('\n');
+        alert("Action Items Extracted:\n\n" + list);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAILoading(false);
+    }
+  };
 
   // Version History Logic
   const fetchVersions = async () => {
@@ -473,6 +551,39 @@ export default function DocumentEditor({ documentId }) {
           >
             <Code fontSize="small" />
           </button>
+
+          <div className="w-px h-5 bg-gray-300 mx-1"></div>
+
+          {/* AI Tools */}
+          <button 
+            onClick={handleSummarize}
+            disabled={isAILoading}
+            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            title="Summarize Document"
+          >
+            <Summarize fontSize="small" />
+            Summarize
+          </button>
+
+          <button 
+            onClick={handleRewrite}
+            disabled={isAILoading}
+            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            title="Rewrite highlighted text"
+          >
+            <AutoFixHigh fontSize="small" />
+            Rewrite
+          </button>
+
+          <button 
+            onClick={handleActionItems}
+            disabled={isAILoading}
+            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            title="Extract Action Items"
+          >
+            <Checklist fontSize="small" />
+            Tasks
+          </button>
             </>
           ) : (
             <div className="text-xs font-semibold text-gray-500 uppercase px-2 py-1 bg-gray-200 rounded">
@@ -507,6 +618,14 @@ export default function DocumentEditor({ documentId }) {
           
           <div className="w-px h-5 bg-gray-300"></div>
           
+          <button 
+            onClick={() => setIsAIChatOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1.5 rounded-md transition-colors"
+          >
+            <AutoAwesome fontSize="small" />
+            AI CHAT
+          </button>
+
           <button 
             onClick={() => setIsHistoryOpen(true)}
             className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded-md transition-colors"
@@ -609,6 +728,12 @@ export default function DocumentEditor({ documentId }) {
         onClose={() => setIsShareOpen(false)}
         documentId={documentId}
         currentUserRole={userRole}
+      />
+
+      <AIChatSidebar 
+        isOpen={isAIChatOpen} 
+        onClose={() => setIsAIChatOpen(false)}
+        getDocumentText={getDocumentText}
       />
     </div>
   );

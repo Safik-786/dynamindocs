@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TextField, Button, Typography, Alert, Box, IconButton, InputAdornment } from "@mui/material";
 import Link from "next/link";
 import { ArrowBack as ArrowBackIcon, Visibility, VisibilityOff } from "@mui/icons-material";
+import CustomHeading from "@/components/ui/CustomHeading";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,12 +51,11 @@ export default function RegisterPage() {
           <ArrowBackIcon fontSize="small" className="mr-1" /> Back to home
         </Link>
         
-        <Typography variant="h4" component="h4" className="font-extrabold text-slate-900 mb-2">
-          Create Account
-        </Typography>
-        <Typography variant="body1" className="text-slate-500 mb-20">
-          Join DynamicDocs and start collaborating.
-        </Typography>
+        <CustomHeading 
+          title="Create Account" 
+          subtitle="Join DDOCS and start collaborating." 
+          className="mb-8" 
+        />
 
         {error && <Alert severity="error" className="mb-6 rounded-xl">{error}</Alert>}
 

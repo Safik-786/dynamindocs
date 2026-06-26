@@ -69,7 +69,7 @@ export class ApiPipeline {
           throw new Error("Pipeline execution failed: No controller defined.");
         }
 
-        // 🛡️ Forensic Wrap: Ensure requestContext is available in AsyncLocalStorage
+        //  Forensic Wrap: Ensure requestContext is available in AsyncLocalStorage
         // This allows audit logs to capture metadata even if prop-drilling fails.
         return await requestContext.run(ctx.requestContext, () => this.controllerFn(ctx));
 

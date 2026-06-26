@@ -50,3 +50,19 @@ export const requireFeature = (featureFlag) => {
     ctx.features[featureFlag] = true;
   };
 };
+
+export const requireAdmin = async (ctx) => {
+  if (!ctx.user) {
+    const error = new Error("Unauthorized access.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const hasAdminRole = ctx.user.roles?.includes("ADMIN");
+  
+  if (!hasAdminRole) {
+    const error = new Error("Forbidden: Admin access required.");
+    error.statusCode = 403;
+    throw error;
+  }
+};

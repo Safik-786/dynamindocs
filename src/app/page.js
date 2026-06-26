@@ -17,8 +17,8 @@ export default function Home() {
           <div className="w-8 shadow h-8 rounded-lg bg-green-950 flex items-center justify-center text-white font-black ">
             D
           </div>
-          <span className="text-xl uppercase font-black tracking-tight bg-gradient-to-r from-orange-300 via-purple-400 to-cyan-400 text-transparent bg-clip-text">
-            DynamicDocs
+          <span className="text-xl uppercase font-black tracking-tight bg-gradient-to-r from-green-400 to-green-700 text-transparent bg-clip-text">
+            DDOCS
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -50,11 +50,11 @@ export default function Home() {
           
           <h1 className={`max-w-4xl text-6xl md:text-8xl text-slate-900 font-bold leading-tight mb-6 [word-spacing:0.1em] ${fancyCursive.className}`}>
             Write together, <br className="hidden md:block"/>
-            <span className="text-green-50 font-extrabold">create faster.</span>
+            <span className="text-primary font-extrabold">create faster.</span>
           </h1>
           
           <p className="max-w-2xl text-lg md:text-xl text-slate-600 mb-10 leading-relaxed">
-            A beautiful, collaborative workspace for your team. Share ideas, edit documents in real-time, and build the future together with DynaminDocs.
+            A beautiful, collaborative workspace for your team. Share ideas, edit documents in real-time, and build the future together with DDOCS.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">

@@ -102,17 +102,17 @@ async function main() {
 
   const usersData = [
     {
-      email: 'admin@dynamindocs.com',
+      email: 'admin@dynamicdocs.com',
       name: 'Admin User',
       roleCode: 'ADMIN',
     },
     {
-      email: 'editor@dynamindocs.com',
+      email: 'editor@dynamicdocs.com',
       name: 'Editor User',
       roleCode: 'EDITOR',
     },
     {
-      email: 'viewer@dynamindocs.com',
+      email: 'viewer@dynamicdocs.com',
       name: 'Viewer User',
       roleCode: 'VIEWER',
     },

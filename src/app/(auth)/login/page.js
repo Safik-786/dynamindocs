@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { TextField, Button, Typography, Alert, Box, IconButton, InputAdornment } from "@mui/material";
 import Link from "next/link";
 import { ArrowBack as ArrowBackIcon, Visibility, VisibilityOff } from "@mui/icons-material";
+import CustomHeading from "@/components/ui/CustomHeading";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,12 +48,11 @@ export default function LoginPage() {
           <ArrowBackIcon fontSize="small" className="mr-1" /> Back to home
         </Link>
         
-        <Typography variant="h4" component="h1" className="font-extrabold text-slate-900 mb-2">
-          Welcome back
-        </Typography>
-        <Typography variant="body1" className="text-slate-500 mb-8">
-          Enter your details to access your workspace.
-        </Typography>
+        <CustomHeading 
+          title="Welcome back" 
+          subtitle="Enter your details to access your workspace." 
+          className="mb-8" 
+        />
 
         {error && <Alert severity="error" className="mb-6 rounded-xl">{error}</Alert>}
 

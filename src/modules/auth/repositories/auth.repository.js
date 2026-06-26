@@ -1,8 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
 export const createUser = async (userData) => {
+  const defaultRole = await prisma.rbacRole.findUnique({
+    where: { code: 'EDITOR' }
+  });
+
   return await prisma.user.create({
-    data: userData,
+    data: {
+      ...userData,
+      roles: defaultRole ? {
+        create: {
+          roleId: defaultRole.id
+        }
+      } : undefined
+    },
   });
 };
 

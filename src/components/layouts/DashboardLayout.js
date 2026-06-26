@@ -97,16 +97,20 @@ export default function DashboardLayout({ children, titleSlot, rightControlsSlot
                 )}
               </div>
               
-              <Link href="#" className="px-2 py-1 text-[13px] text-gray-600 hover:bg-gray-100 rounded transition-colors font-medium">Users</Link>
+              {session?.user?.roles?.includes('ADMIN') && (
+                <>
+                  <Link href="/users" className={`px-2 py-1 text-[13px] rounded transition-colors font-medium ${pathname === "/users" ? "text-primary bg-blue-50" : "text-gray-600 hover:bg-gray-100"}`}>Users</Link>
+                  <Link href="/rbac" className={`px-2 py-1 text-[13px] rounded transition-colors font-medium ${pathname === "/rbac" ? "text-primary bg-blue-50" : "text-gray-600 hover:bg-gray-100"}`}>RBAC</Link>
+                </>
+              )}
               <Link href="#" className="px-2 py-1 text-[13px] text-gray-600 hover:bg-gray-100 rounded transition-colors font-medium">Settings</Link>
-              <Link href="#" className="px-2 py-1 text-[13px] text-gray-600 hover:bg-gray-100 rounded transition-colors font-medium">RBAC</Link>
             </div>
 
             {/* Title / Document Name (Moved to the right side of the menu) */}
             <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
               {titleSlot ? titleSlot : (
-                <h1 className="px-1.5 py-0.5 text-sm uppercase font-black truncate max-w-sm bg-gradient-to-r from-orange-300 via-purple-400 to-cyan-400 text-transparent bg-clip-text">
-                  DynamicDocs
+                <h1 className="px-1.5 py-0.5 text-sm uppercase font-black truncate max-w-sm bg-gradient-to-r from-green-400 to-green-700 text-transparent bg-clip-text">
+                  DDOCS
                 </h1>
               )}
             </div>
