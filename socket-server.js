@@ -1,8 +1,18 @@
 const { Server } = require("socket.io");
 
+const http = require("http");
+
 const PORT = process.env.PORT || 3001;
 
-const io = new Server(PORT, {
+// Create a basic HTTP server for Render health checks
+const server = http.createServer((req, res) => {
+  if (req.url === "/") {
+    res.writeHead(200);
+    res.end("Socket server is running!");
+  }
+});
+
+const io = new Server(server, {
   cors: {
     origin: "*", // In production, restrict this to your domain
     methods: ["GET", "POST"]
@@ -30,4 +40,6 @@ io.on("connection", (socket) => {
   });
 });
 
-console.log(`WebSocket server running on port ${PORT}`);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`WebSocket server running on port ${PORT}`);
+});
