@@ -33,7 +33,7 @@ export default function DashboardLayout({ children, titleSlot, rightControlsSlot
 
   return (
     <div className="flex flex-col h-screen bg-[#F9FBFD] overflow-hidden">
-      {/* Google Docs Style Header */}
+      {/*  Header */}
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-4">
           {/* Document Icon linking back to dashboard */}
@@ -42,7 +42,6 @@ export default function DashboardLayout({ children, titleSlot, rightControlsSlot
           </Link>
           
           <div className="flex items-center gap-6">
-            
             {/* Menu Bar */}
             <div className="flex items-center gap-2 mt-0.5">
               <Link 
@@ -106,7 +105,7 @@ export default function DashboardLayout({ children, titleSlot, rightControlsSlot
               <Link href="#" className="px-2 py-1 text-[13px] text-gray-600 hover:bg-gray-100 rounded transition-colors font-medium">Settings</Link>
             </div>
 
-            {/* Title / Document Name (Moved to the right side of the menu) */}
+            {/* Title / Document Name */}
             <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
               {titleSlot ? titleSlot : (
                 <h1 className="px-1.5 py-0.5 text-sm uppercase font-black truncate max-w-sm bg-gradient-to-r from-green-400 to-green-700 text-transparent bg-clip-text">
