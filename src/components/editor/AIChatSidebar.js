@@ -1,30 +1,78 @@
 "use client";
 
-import { useChat } from "ai/react";
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Close, Send, AutoAwesome } from "@mui/icons-material";
 
 export function AIChatSidebar({ isOpen, onClose, getDocumentText }) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: "/api/v1/ai/chat",
-    body: {
-      documentText: isOpen ? getDocumentText() : "",
-    },
-  });
-
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isLoading]);
 
   if (!isOpen) return null;
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = { 
+      id: Date.now().toString(), 
+      role: "user", 
+      content: input.trim() 
+    };
+    
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/v1/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          documentText: getDocumentText()
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Failed to fetch response");
+      }
+      
+      if (data.reply) {
+        setMessages((prev) => [
+          ...prev, 
+          { id: (Date.now() + 1).toString(), role: "assistant", content: data.reply }
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStop = () => {
+    // In a simple fetch setup, we can't easily abort a fetch mid-flight without AbortController.
+    // We can just reset loading state to allow the user to try again.
+    setIsLoading(false);
+  };
+
   return (
     <div className="absolute top-0 right-0 h-full w-80 bg-white shadow-2xl border-l border-gray-200 flex flex-col z-50 transform transition-transform">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-primary-100">
         <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-          <AutoAwesome fontSize="small" className="text-indigo-600" /> AI Assistant
+          <AutoAwesome fontSize="small" className="text-primary" /> AI Assistant
         </h2>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
           <Close fontSize="small" />
@@ -48,7 +96,7 @@ export function AIChatSidebar({ isOpen, onClose, getDocumentText }) {
               <div
                 className={`p-3 rounded-lg text-sm ${
                   m.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-none"
+                    ? "bg-primary text-white rounded-br-none"
                     : "bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm"
                 }`}
               >
@@ -67,6 +115,11 @@ export function AIChatSidebar({ isOpen, onClose, getDocumentText }) {
             <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         )}
+        {error && (
+          <div className="text-red-500 text-xs p-2 text-center bg-red-50 rounded-lg">
+            An error occurred: {error.message || "Failed to load response."}
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -74,17 +127,27 @@ export function AIChatSidebar({ isOpen, onClose, getDocumentText }) {
         <div className="relative flex items-center">
           <input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about the document..."
-            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="absolute right-1 w-8 h-8 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-full transition-colors"
-          >
-            <Send fontSize="small" sx={{ fontSize: 16 }} />
-          </button>
+          {isLoading ? (
+            <button
+              type="button"
+              onClick={handleStop}
+              className="absolute right-1 w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+            >
+              <Close fontSize="small" sx={{ fontSize: 16 }} />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!input || input.trim().length === 0}
+              className="absolute right-1 w-8 h-8 flex items-center justify-center bg-primary hover:bg-primary-hover disabled:bg-gray-300 text-white rounded-full transition-colors cursor-pointer disabled:cursor-not-allowed"
+            >
+              <Send fontSize="small" sx={{ fontSize: 16 }} />
+            </button>
+          )}
         </div>
       </form>
     </div>

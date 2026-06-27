@@ -19,6 +19,9 @@ export default function DocumentPage({ params }) {
   const [title, setTitle] = useState("Untitled document");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("Offline");
+
+  const isOffline = syncStatus.includes("Offline");
 
   useEffect(() => {
     if (document) {
@@ -79,6 +82,29 @@ export default function DocumentPage({ params }) {
           >
             {isStarred ? <StarFilledIcon className="text-yellow-400" fontSize="small" /> : <StarIcon fontSize="small" />}
           </button>
+
+          {/* Sync Status */}
+          <div className={`flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider ml-4 ${
+            isOffline ? "text-amber-600" : "text-gray-500"
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              isOffline ? "bg-amber-500 animate-pulse" : 
+              syncStatus === "Syncing..." ? "bg-blue-500 animate-pulse" : 
+              "bg-emerald-500"
+            }`}></div>
+            {syncStatus === "Syncing..." ? (
+              <span className="flex items-center">
+                SAVING
+                <span className="flex ml-0.5 tracking-widest">
+                  <span className="animate-pulse">.</span>
+                  <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
+                  <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
+                </span>
+              </span>
+            ) : (
+              syncStatus
+            )}
+          </div>
         </>
       }
       rightControlsSlot={
@@ -90,7 +116,10 @@ export default function DocumentPage({ params }) {
         )
       }
     >
-      <DocumentEditor documentId={documentId} />
+      <DocumentEditor 
+        documentId={documentId} 
+        onSyncStatusChange={setSyncStatus} 
+      />
     </DashboardLayout>
   );
 }

@@ -17,12 +17,13 @@ import {
 } from '@mui/icons-material';
 import { ShareModal } from './ShareModal';
 import { AIChatSidebar } from './AIChatSidebar';
+import { AIResultSlideover } from './AIResultSlideover';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
 import { CustomCodeBlock } from './CustomCodeBlock';
 
-export default function DocumentEditor({ documentId }) {
+export default function DocumentEditor({ documentId, onSyncStatusChange }) {
   const { data: session } = useSession();
   const [isReady, setIsReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState("Offline");
@@ -39,6 +40,7 @@ export default function DocumentEditor({ documentId }) {
   // AI State
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
+  const [aiResult, setAiResult] = useState({ isOpen: false, type: null, data: null, originalText: null, selection: null });
   
   const ydocRef = useRef(new Y.Doc());
   const socketRef = useRef(null);
@@ -232,6 +234,12 @@ export default function DocumentEditor({ documentId }) {
     };
   }, [documentId]);
 
+  useEffect(() => {
+    if (onSyncStatusChange) {
+      onSyncStatusChange(syncStatus);
+    }
+  }, [syncStatus, onSyncStatusChange]);
+
   // AI Features Logic
   const getDocumentText = () => {
     return editor ? editor.getText() : "";
@@ -248,7 +256,9 @@ export default function DocumentEditor({ documentId }) {
         body: JSON.stringify({ documentText: text })
       });
       const data = await res.json();
-      if (data.summary) alert("AI Summary:\n\n" + data.summary);
+      if (data.summary) {
+        setAiResult({ isOpen: true, type: 'summary', data: data.summary, originalText: null, selection: null });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -273,7 +283,7 @@ export default function DocumentEditor({ documentId }) {
       });
       const data = await res.json();
       if (data.rewrittenText) {
-        editor.commands.insertContentAt({ from, to }, data.rewrittenText);
+        setAiResult({ isOpen: true, type: 'rewrite', data: data.rewrittenText, originalText: selectedText, selection: { from, to } });
       }
     } catch (e) {
       console.error(e);
@@ -283,7 +293,15 @@ export default function DocumentEditor({ documentId }) {
   };
 
   const handleActionItems = async () => {
-    const text = getDocumentText();
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    let text;
+    if (from !== to) {
+      text = editor.state.doc.textBetween(from, to, ' ');
+    } else {
+      text = getDocumentText();
+    }
+    
     if (!text) return;
     setIsAILoading(true);
     try {
@@ -294,13 +312,27 @@ export default function DocumentEditor({ documentId }) {
       });
       const data = await res.json();
       if (data.actionItems) {
-        const list = data.actionItems.map(item => `• ${item}`).join('\n');
-        alert("Action Items Extracted:\n\n" + list);
+        setAiResult({ isOpen: true, type: 'tasks', data: data.actionItems, originalText: null, selection: null });
       }
     } catch (e) {
       console.error(e);
     } finally {
       setIsAILoading(false);
+    }
+  };
+
+  const handleReplaceRewrite = () => {
+    if (editor && aiResult.type === 'rewrite' && aiResult.selection) {
+      const { from, to } = aiResult.selection;
+      editor.commands.insertContentAt({ from, to }, aiResult.data);
+      setAiResult({ ...aiResult, isOpen: false });
+    }
+  };
+
+  const handleInsertSummary = () => {
+    if (editor && aiResult.type === 'summary') {
+      editor.commands.insertContent(`\n\n**AI Summary:**\n${aiResult.data}\n\n`);
+      setAiResult({ ...aiResult, isOpen: false });
     }
   };
 
@@ -382,11 +414,44 @@ export default function DocumentEditor({ documentId }) {
 
   if (!editor || !isReady) {
     return (
-      <div className="flex justify-center items-center p-10 min-h-[300px]">
-        <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+      <div className="flex flex-col h-full w-full max-w-4xl mx-auto p-8 mt-10">
+        {/* Toolbar Skeleton */}
+        <div className="flex gap-3 mb-10 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded-md w-8"></div>
+          <div className="h-8 bg-gray-200 rounded-md w-8"></div>
+          <div className="h-8 bg-gray-200 rounded-md w-8"></div>
+          <div className="h-8 bg-gray-200 rounded-md w-16 ml-4"></div>
+          <div className="h-8 bg-gray-200 rounded-md w-16"></div>
+        </div>
+        
+        {/* Document Body Skeleton */}
+        <div className="space-y-6 animate-pulse">
+          {/* Title block */}
+          <div className="h-12 bg-gray-200 rounded-md w-2/3 mb-10"></div>
+          
+          {/* Paragraph 1 */}
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-11/12"></div>
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+          </div>
+          
+          {/* Paragraph 2 */}
+          <div className="space-y-3 pt-4">
+            <div className="h-4 bg-gray-200 rounded w-11/12"></div>
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+          
+          {/* Paragraph 3 */}
+          <div className="space-y-3 pt-4">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -394,12 +459,18 @@ export default function DocumentEditor({ documentId }) {
   const isOffline = syncStatus.includes("Offline");
 
   return (
-    <div className="flex flex-col h-full w-full relative">
+    <div 
+      className="flex flex-col h-full w-full relative transition-all duration-300"
+      style={{ paddingRight: aiResult.isOpen ? '400px' : (isAIChatOpen || isHistoryOpen) ? '320px' : '0px' }}
+    >
       {/* Google Docs Style Toolbar */}
-      <div className="bg-[#EDF2FA] rounded-full mx-4 mt-2 px-4 py-1.5 flex items-center justify-between shrink-0">
+      <div 
+        className="bg-[#EDF2FA] rounded-full mx-4 mt-2 px-4 py-1.5 flex items-center justify-between shrink-0 overflow-x-auto"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         
         {/* Formatting Tools (Hidden for Viewers) */}
-        <div className="flex gap-1 items-center flex-wrap">
+        <div className="flex gap-1 items-center shrink-0">
           {userRole !== "VIEWER" ? (
             <>
               <button 
@@ -501,7 +572,7 @@ export default function DocumentEditor({ documentId }) {
           <button 
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`w-8 h-8 flex items-center justify-center rounded text-sm ${
+            className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded text-sm ${
               editor.isActive('bulletList') 
                 ? 'bg-[#D3E3FD] text-[#041E49]' 
                 : 'text-gray-700 hover:bg-gray-200'
@@ -514,7 +585,7 @@ export default function DocumentEditor({ documentId }) {
           <button 
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`w-8 h-8 flex items-center justify-center rounded text-sm ${
+            className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded text-sm ${
               editor.isActive('orderedList') 
                 ? 'bg-[#D3E3FD] text-[#041E49]' 
                 : 'text-gray-700 hover:bg-gray-200'
@@ -529,7 +600,7 @@ export default function DocumentEditor({ documentId }) {
           <button 
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={`w-8 h-8 flex items-center justify-center rounded text-sm ${
+            className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded text-sm ${
               editor.isActive('blockquote') 
                 ? 'bg-[#D3E3FD] text-[#041E49]' 
                 : 'text-gray-700 hover:bg-gray-200'
@@ -542,7 +613,7 @@ export default function DocumentEditor({ documentId }) {
           <button 
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            className={`w-8 h-8 flex items-center justify-center rounded text-sm ${
+            className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded text-sm ${
               editor.isActive('codeBlock') 
                 ? 'bg-[#D3E3FD] text-[#041E49]' 
                 : 'text-gray-700 hover:bg-gray-200'
@@ -558,30 +629,30 @@ export default function DocumentEditor({ documentId }) {
           <button 
             onClick={handleSummarize}
             disabled={isAILoading}
-            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            className="cursor-pointer flex items-center gap-1 w-auto h-8 px-2 rounded text-[12px] whitespace-nowrap font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
             title="Summarize Document"
           >
-            <Summarize fontSize="small" />
+            <Summarize fontSize="small" className="text-gray-700" />
             Summarize
           </button>
 
           <button 
             onClick={handleRewrite}
             disabled={isAILoading}
-            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            className="cursor-pointer flex items-center gap-1 w-auto h-8 px-2 rounded text-[12px] whitespace-nowrap font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
             title="Rewrite highlighted text"
           >
-            <AutoFixHigh fontSize="small" />
+            <AutoFixHigh fontSize="small" className="text-gray-700" />
             Rewrite
           </button>
 
           <button 
             onClick={handleActionItems}
             disabled={isAILoading}
-            className="flex items-center gap-1 w-auto h-8 px-2 flex items-center justify-center rounded text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
-            title="Extract Action Items"
+            className="cursor-pointer flex items-center gap-1 w-auto h-8 px-2 rounded text-[12px] whitespace-nowrap font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+            title="Extract Tasks (Highlight specific tasks in your text, or leave unselected to scan the whole document)"
           >
-            <Checklist fontSize="small" />
+            <Checklist fontSize="small" className="text-gray-700" />
             Tasks
           </button>
             </>
@@ -592,45 +663,22 @@ export default function DocumentEditor({ documentId }) {
           )}
         </div>
         
-        {/* Sync Status, Share & History */}
-        <div className="flex items-center gap-4">
-          <div className={`flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider ${
-            isOffline ? "text-amber-600" : "text-gray-500"
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              isOffline ? "bg-amber-500 animate-pulse" : 
-              syncStatus === "Syncing..." ? "bg-blue-500 animate-pulse" : 
-              "bg-emerald-500"
-            }`}></div>
-            {syncStatus === "Syncing..." ? (
-              <span className="flex items-center">
-                SAVING
-                <span className="flex ml-0.5 tracking-widest">
-                  <span className="animate-pulse">.</span>
-                  <span className="animate-pulse" style={{ animationDelay: '200ms' }}>.</span>
-                  <span className="animate-pulse" style={{ animationDelay: '400ms' }}>.</span>
-                </span>
-              </span>
-            ) : (
-              syncStatus
-            )}
-          </div>
-          
-          <div className="w-px h-5 bg-gray-300"></div>
+        {/* Share & History */}
+        <div className="flex items-center gap-2 shrink-0 ml-4">
           
           <button 
             onClick={() => setIsAIChatOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1.5 rounded-md transition-colors"
+            className="cursor-pointer flex items-center gap-1.5 text-[12px] whitespace-nowrap font-medium text-gray-700 hover:bg-gray-200 px-2 h-8 rounded transition-colors"
           >
-            <AutoAwesome fontSize="small" />
+            <AutoAwesome fontSize="small" className="text-gray-700" />
             AI CHAT
           </button>
 
           <button 
             onClick={() => setIsHistoryOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded-md transition-colors"
+            className="cursor-pointer flex items-center gap-1.5 text-[12px] whitespace-nowrap font-medium text-gray-700 hover:bg-gray-200 px-2 h-8 rounded transition-colors"
           >
-            <History fontSize="small" />
+            <History fontSize="small" className="text-gray-700" />
             HISTORY
           </button>
 
@@ -646,7 +694,7 @@ export default function DocumentEditor({ documentId }) {
       
       {/* Editor Canvas (A4 Page) */}
       <div className="flex-1 overflow-y-auto py-6">
-        <div className="max-w-[816px] mx-auto min-h-[1056px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] border border-gray-200 p-12 md:p-20">
+        <div className="max-w-[816px] mx-auto min-h-[1056px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] border border-gray-200 p-12 md:p-20 transition-all duration-300">
           <EditorContent editor={editor} className="min-h-full" />
         </div>
       </div>
@@ -734,6 +782,14 @@ export default function DocumentEditor({ documentId }) {
         isOpen={isAIChatOpen} 
         onClose={() => setIsAIChatOpen(false)}
         getDocumentText={getDocumentText}
+      />
+
+      <AIResultSlideover 
+        isOpen={aiResult.isOpen}
+        onClose={() => setAiResult({ ...aiResult, isOpen: false })}
+        result={aiResult}
+        onReplace={handleReplaceRewrite}
+        onInsert={handleInsertSummary}
       />
     </div>
   );

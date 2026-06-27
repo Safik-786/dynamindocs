@@ -75,6 +75,7 @@ export class ApiPipeline {
 
       } catch (error) {
         console.error(`[API Error] ${req.method} ${url.pathname}:`, error.message);
+        console.error(error.stack);
 
         // Map expected schema errors if not caught by specific middleware logic
         let statusCode = error.statusCode || 500;

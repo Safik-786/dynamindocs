@@ -92,18 +92,18 @@ export function ShareModal({ isOpen, onClose, documentId, currentUserRole }) {
   const isOwner = currentUserRole === "OWNER";
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">Share document</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 p-1 transition-colors">
-            <Close fontSize="small" />
-          </button>
-        </div>
+    <div className="absolute top-0 right-0 h-full w-[400px] bg-white shadow-2xl border-l border-gray-200 flex flex-col z-[60] transform transition-transform">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <PersonAdd fontSize="small" className="text-blue-600" /> Share Document
+        </h2>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 bg-gray-100 w-7 h-7 flex items-center justify-center rounded-full shrink-0 hover:bg-gray-200 transition-colors">
+          <Close fontSize="small" />
+        </button>
+      </div>
 
-        <div className="overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Invite Section */}
           {isOwner ? (
             <form onSubmit={handleInvite} className="space-y-3">
@@ -201,7 +201,7 @@ export function ShareModal({ isOpen, onClose, documentId, currentUserRole }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center mt-auto">
           <button 
             onClick={handleCopyLink}
             className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
@@ -213,8 +213,6 @@ export function ShareModal({ isOpen, onClose, documentId, currentUserRole }) {
             Done
           </button>
         </div>
-
-      </div>
     </div>
   );
 }

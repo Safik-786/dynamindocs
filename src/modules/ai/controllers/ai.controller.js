@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { StructuredOutputParser, HttpResponseOutputParser } from "langchain/output_parsers";
+import { StringOutputParser, StructuredOutputParser } from "@langchain/core/output_parsers";
+import { createUIMessageStreamResponse } from "ai";
+import { toUIMessageStream } from "@ai-sdk/langchain";
 import { z } from "zod";
 
 const getModel = (temperature = 0.2) => {
   return new ChatGoogleGenerativeAI({
-    modelName: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     temperature,
     apiKey: process.env.GEMINI_API_KEY,
   });
@@ -100,7 +101,6 @@ export const chat = async (ctx) => {
   }
 
   const model = getModel(0.3);
-  const parser = new HttpResponseOutputParser();
   const prompt = PromptTemplate.fromTemplate(`
     You are a helpful AI assistant integrated into a document editor.
     Use the following document text as context to answer the user's questions.
@@ -125,13 +125,18 @@ export const chat = async (ctx) => {
     
   const latestMessage = messages[messages.length - 1].content;
 
-  const stream = await prompt.pipe(model).pipe(parser).stream({
-    documentText: documentText || "The document is currently empty.",
-    chatHistory: chatHistory || "No previous history.",
-    input: latestMessage,
-  });
+  const chain = prompt.pipe(model).pipe(new StringOutputParser());
 
-  return new Response(stream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
+  try {
+    const reply = await chain.invoke({
+      documentText: documentText || "The document is currently empty.",
+      chatHistory: chatHistory || "No previous history.",
+      input: latestMessage,
+    });
+
+    return NextResponse.json({ reply });
+  } catch (error) {
+    console.error("AI CHAT ERROR:", error);
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
 };
