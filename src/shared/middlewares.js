@@ -1,17 +1,17 @@
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/lib/auth";
 
 export const requireAuth = async (ctx) => {
-  // Extract token from request using next-auth/jwt
-  const token = await getToken({ req: ctx.req, secret: process.env.NEXTAUTH_SECRET });
+  // Extract session using Auth.js v5 auth() helper
+  const session = await auth();
   
-  if (!token) {
+  if (!session || !session.user) {
     const error = new Error("Unauthorized access. Please log in.");
     error.statusCode = 401;
     throw error;
   }
   
   // Attach user to context
-  ctx.user = token;
+  ctx.user = session.user;
 };
 
 export const requirePermissions = (requiredPermissions) => {

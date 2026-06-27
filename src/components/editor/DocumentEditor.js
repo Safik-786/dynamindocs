@@ -137,7 +137,8 @@ export default function DocumentEditor({ documentId, onSyncStatusChange }) {
       }
 
       // Connect to WebSocket
-      socket = io("http://localhost:3001");
+      const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:3001";
+      socket = io(socketUrl);
       socketRef.current = socket;
 
       socket.on("connect", async () => {
