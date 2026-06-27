@@ -121,18 +121,23 @@ body {
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
-::-webkit-scrollbar-track {
+
+::-webkit-scrollbar, *::-webkit-scrollbar {
+  width: px;
+  height: 4px;
+}
+::-webkit-scrollbar-track, *::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb, *::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.5);
-  border-radius: 4px;
+  border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 114, 128, 0.8);
 }
 

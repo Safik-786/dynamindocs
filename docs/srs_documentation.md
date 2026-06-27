@@ -1,6 +1,9 @@
 # Software Requirements Specification (SRS)
 **Project:** Local-First Collaborative Document Editor
 
+
+Deployment in vercel: npx vercel --prod
+
 ## 1. Introduction
 
 ### 1.1 Purpose

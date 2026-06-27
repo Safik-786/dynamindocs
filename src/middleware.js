@@ -8,26 +8,29 @@ export function middleware(request) {
     request.cookies.get('authjs.session-token') ||
     request.cookies.get('__Secure-authjs.session-token');
 
-  // If there is no token, redirect the user to the login page
-  if (!token) {
+  const { pathname } = request.nextUrl;
+  
+  // Define routes that should redirect TO dashboard if the user IS logged in
+  const isAuthPage = pathname === '/' || pathname === '/login' || pathname === '/register';
+
+  // If the user IS logged in and tries to access an auth page or home page
+  if (token && isAuthPage) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If there is no token, and they are trying to access a protected route (anything other than auth pages)
+  if (!token && !isAuthPage) {
     const loginUrl = new URL('/login', request.url);
-    
-    // Preserve the original URL so they can be redirected back after successful login
-    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
-    
+    loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Allow the request to proceed if authenticated
   return NextResponse.next();
 }
 
-// Specify which routes should be protected by this middleware
 export const config = {
+  // Run on every route EXCEPT API routes, static files, and Next.js internal files
   matcher: [
-    '/dashboard/:path*', 
-    '/document/:path*', 
-    '/rbac/:path*', 
-    '/users/:path*'
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

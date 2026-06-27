@@ -702,7 +702,7 @@ export default function DocumentEditor({ documentId, onSyncStatusChange }) {
 
       {/* Version History Sidebar */}
       {isHistoryOpen && (
-        <div className="absolute top-0 right-0 h-full w-80 bg-white shadow-2xl border-l border-gray-200 flex flex-col z-50 transform transition-transform">
+        <div className="absolute top-0 right-0 h-full w-80 bg-white border-l border-gray-200 flex flex-col z-50 transform transition-transform">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2">
               <History fontSize="small" /> Version History
